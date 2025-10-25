@@ -205,7 +205,7 @@ void exibir_menu() {
     limpar_tela();
     box_title("MENU");
     box_line("");
-    box_line("BEM VINDO AO JOGO DE QUIZ!");
+    box_line("BEM VINDO AO JOGO DE QUIZ!"); // vai tomar no cu
     box_line("");
     box_line(" [1] Iniciar Jogo");
     box_line(" [2] Instrucoes");
