@@ -26,10 +26,10 @@ typedef struct {
 
 // --- CONSTANTES ---
 #define NUM_TOTAL_QUESTOES 16
-#define VIDAS_INICIAIS 5
+#define VIDAS_INICIAIS 3
 #define NUM_NIVEIS 3
 
-#define BOX_WIDTH 100
+#define BOX_WIDTH 110
 
 // --- PROTÓTIPOS ---
 void limpar_tela();
@@ -81,9 +81,14 @@ int main() {
                             case 'A': case 'B': case 'C': case 'D':
                                 if (entrada_jogador == questao_atual.resposta_correta) {
                                     jogador.pontuacao += 10;
+                                    if (jogador.vidas >= 3){
+                                        printf("Voce Alcançou o limite de vidas!!/n");
+                                    } else {
+                                       jogador.vidas+=1; 
+                                    }
                                     exibir_feedback(1, questao_atual.resposta_correta);
                                 } else {
-                                    jogador.vidas--;
+                                    jogador.vidas-=1;
                                     exibir_feedback(0, questao_atual.resposta_correta);
                                 }
                                 pergunta_respondida = 1;
@@ -120,6 +125,12 @@ int main() {
                                     pausar_tela();
                                 }
                                 break;
+                            
+                            case 'S':
+                                system("cls");
+                                printf("\nObrigado por jogar! Ate a proxima.\n");
+                                exit(0);
+                           
                             default:
                                 printf("\n> Opcao invalida! Tente novamente.\n");
                                 pausar_tela();
@@ -222,7 +233,7 @@ void exibir_instrucoes() {
     box_line("");
     box_printf("- O jogo tem %d niveis (Facil, Medio e Dificil).", NUM_NIVEIS);
     box_printf("- Voce comeca com %d vidas.", VIDAS_INICIAIS);
-    box_line("- Ajudas (uma vez cada): [P] Pular  [T] Trocar  [H] Dica");
+    box_line("- Ajudas (uma vez cada): [P] Pular  [T] Trocar  [H] Dica  [S] Sair" );
     box_line("");
     box_line("Pressione Enter para voltar ao menu...");
     box_border();
@@ -236,7 +247,7 @@ void exibir_interface_jogo(Jogador jogador, Questao questao) {
     box_printf("Vidas: %d/%d", jogador.vidas, VIDAS_INICIAIS);
     char ajudas[128];
     snprintf(ajudas, sizeof(ajudas),
-             "[P] Pular%s  [T] Trocar%s  [H] Dica%s",
+             "[P] Pular%s  [T] Trocar%s  [H] Dica%s  [S] Sair",
              jogador.usou_pular ? " (usado)" : "",
              jogador.usou_trocar ? " (usado)" : "",
              jogador.usou_dica ? " (usado)" : "");
@@ -287,7 +298,7 @@ void exibir_tela_derrota() {
 }
 
 void inicializar_jogador(Jogador *jogador) {
-    jogador->vidas = 3;
+    jogador->vidas = 1;
     jogador->pontuacao = 0;
     jogador->nivel_atual = 1;
     jogador->usou_pular = 0;
@@ -336,7 +347,7 @@ void carregar_banco_de_questoes(Questao banco[]) {
         'B', "O limite máximo é definido por uma constante do C chamada RAND_MAX", 2};
 
     // Nível 3 - Difícil
-    banco[11] = (Questao){"Considere dois vetores 2D: ( [u = (2, -1), \ quad v = (1, 3)]O produto interno é dado por:[u \ cdot v = u_x v_x + u_y v_y] ), Com base nisso, qual é o sinal do ângulo entre os vetores e, portanto, o bit recebido?",
+    banco[11] = (Questao){ "Considere dois vetores 2D: ( [u = (2, -1), \ quad v = (1, 3)]O produto interno é dado por:[u \ cdot v = u_x v_x + u_y v_y] ), Com base nisso, qual é o sinal do ângulo entre os vetores e, portanto, o bit recebido?",
         {"Bit=0", "Bit=1", "Bit=-1 (erro)", "Bit=indefinido"},
         'A', "Produto interno positivo -> bit=0.", 3};
     banco[12] = (Questao){"O programa em C utiliza o cálculo do produto interno para decidir o bit recebido:( int a1 = -2, a2 = 4;int b1 = 3, b2 = 1;int produto = a1*b1 + a2*b2; ), Se produto == 0, o sistema deve registrar erro. Qual será o valor do bit calculado?",
@@ -351,7 +362,7 @@ void carregar_banco_de_questoes(Questao banco[]) {
     banco[15] = (Questao){"Suponha o seguinte código:( #include <stdio.h>, #include <stdlib.h>, #include <time.h>  int main() { srand(time(NULL)); printf(''%d\n'', rand() % 2); return 0;} ), O que esse programa imprime?",
         {"Sempre 0.", "Sempre 1.", "Valores aleatorios entre 0 e 1.", "Valores aleatorios entre 1 e 2."},
         'C', "%2 gera resto 0 ou 1.", 3};
-}
+ }
 
 Questao obter_questao_por_nivel(Questao banco[], int nivel, int indice_questao_nivel) {
     int contador_nivel = 0;
@@ -360,7 +371,7 @@ Questao obter_questao_por_nivel(Questao banco[], int nivel, int indice_questao_n
             if (contador_nivel == indice_questao_nivel) return banco[i];
             contador_nivel++;
         }
-    }
+    } 
     return banco[0];
 }
 
