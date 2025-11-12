@@ -1,4 +1,4 @@
-# Jogo Quiz — C
+# Jogo Quiz.C
 
 Fizemos esse jogo por terminal em lingugem C. O jogador responde perguntas divididas em níveis (Fácil, Médio, Difícil), tem um número limitado de vidas, pontua por acertos e pode usar ajudas uma vez cada (Pular, Trocar, Dica).
 
@@ -37,8 +37,6 @@ gcc -o jogo.exe jogo.c
 .\\jogo.exe
 ```
 
-> Dica: se o compilador emitir `warning` sobre tamanho de buffer, revise strings das perguntas/alternativas ou use `-Wall` para ver avisos.
-
 ---
 
 ## Como jogar
@@ -53,12 +51,13 @@ gcc -o jogo.exe jogo.c
    * `T` — Trocar por outra pergunta do mesmo nível
    * `H` — Mostrar uma dica
    * `S` — Sair imediatamente do jogo
-6. Você começa com uma vida, ao decorrer do jogo voce pode chegar até três 
+
+6.Você começa com 1 vida e pode alcançar até 3 conforme acerta as perguntas. Respostas certas aumentam sua pontuação e podem recuperar vidas, enquanto erros diminuem suas vidas, caso chegue a 0 significa que voce perdeu o jogo.
 
 ---
 
 ## Créditos
 
-Autor original do código: *Erick Teixeira, Guilherme Augusto, João Veras. Alexandre Alves*
+Autor original do código: *Erick Teixeira, Guilherme Augusto, João Veras, Alexandre Alves, Diogo Souza*
 
 ---
