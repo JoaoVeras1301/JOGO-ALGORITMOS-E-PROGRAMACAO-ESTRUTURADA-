@@ -25,36 +25,46 @@ typedef struct {
 } Jogador;
 
 // --- CONSTANTES ---
-#define NUM_TOTAL_QUESTOES 16
-#define VIDAS_INICIAIS 3
+#define MAX_QUESTOES_NO_BANCO 50 
+#define MAX_BUFFER_ARQUIVO 20480 // 20KB (para ler o JSON)
+#define VIDAS_INICIAIS 1
+#define MAX_VIDAS 3
 #define NUM_NIVEIS 3
-
+#define PERGUNTAS_POR_NIVEL 3
 #define BOX_WIDTH 110
 
-// --- PROTÓTIPOS ---
+// --- PROTOTIPOS ---
 void limpar_tela();
 void pausar_tela();
 void exibir_menu();
 void exibir_instrucoes();
 void exibir_interface_jogo(Jogador jogador, Questao questao);
-void exibir_feedback(int correto, char resposta_certa);
+void exibir_feedback(int correto, char resposta_certa, Jogador* jogador);
 void exibir_tela_vitoria(Jogador jogador);
 void exibir_tela_derrota();
 void inicializar_jogador(Jogador *jogador);
-void carregar_banco_de_questoes(Questao banco[]);
-Questao obter_questao_por_nivel(Questao banco[], int nivel, int indice_questao_nivel);
-Questao obter_nova_questao_aleatoria(Questao banco[], int nivel_atual, Questao questao_antiga);
+
+int carregar_banco_de_questoes(Questao banco[], int max_questoes);
 void box_border();
 void box_line(const char *text);
 void box_printf(const char *fmt, ...);
 void box_title(const char *title);
+void shuffle_indices(int *array, int n);
 
 // --- MAIN ---
 int main() {
-    srand((unsigned)time(NULL));
+    // Semente para aleatoriedade - mantido como solicitado
+    srand(time(0)); 
 
-    Questao banco_de_questoes[NUM_TOTAL_QUESTOES];
-    carregar_banco_de_questoes(banco_de_questoes);
+    Questao banco_de_questoes[MAX_QUESTOES_NO_BANCO];
+    int num_questoes_carregadas = carregar_banco_de_questoes(banco_de_questoes, MAX_QUESTOES_NO_BANCO);
+
+    if (num_questoes_carregadas == 0) {
+        printf("Erro fatal: Nao foi possivel carregar 'perguntas.json'.\n");
+        printf("Verifique se o arquivo esta na mesma pasta do executavel.\n");
+        pausar_tela();
+        return 1;
+    }
 
     char opcao_menu;
     do {
@@ -65,85 +75,142 @@ int main() {
             case '1': {
                 Jogador jogador;
                 inicializar_jogador(&jogador);
-                int indice_questao_nivel = 0;
 
+                // --- LOGICA DE NIVEL (LOOP PRINCIPAL DO JOGO) ---
                 while (jogador.vidas > 0 && jogador.nivel_atual <= NUM_NIVEIS) {
-                    Questao questao_atual = obter_questao_por_nivel(banco_de_questoes, jogador.nivel_atual, indice_questao_nivel);
-                    int pergunta_respondida = 0;
+                    
+                    // --- 1. PREPARAR O POOL DE PERGUNTAS DO NIVEL ---
+                    int indices_pool_nivel[MAX_QUESTOES_NO_BANCO]; 
+                    int num_questoes_neste_nivel = 0;
 
-                    while (!pergunta_respondida) {
-                        exibir_interface_jogo(jogador, questao_atual);
-                        char entrada_jogador;
-                        scanf(" %c", &entrada_jogador);
-                        entrada_jogador = (char)toupper((unsigned char)entrada_jogador);
-
-                        switch (entrada_jogador) {
-                            case 'A': case 'B': case 'C': case 'D':
-                                if (entrada_jogador == questao_atual.resposta_correta) {
-                                    jogador.pontuacao += 10;
-                                    if (jogador.vidas >= 3){
-                                        printf("Voce Alcançou o limite de vidas!!/n");
-                                    } else {
-                                       jogador.vidas+=1; 
-                                    }
-                                    exibir_feedback(1, questao_atual.resposta_correta);
-                                } else {
-                                    jogador.vidas-=1;
-                                    exibir_feedback(0, questao_atual.resposta_correta);
-                                }
-                                pergunta_respondida = 1;
-                                break;
-                            case 'P':
-                                if (jogador.usou_pular == 0) {
-                                    jogador.usou_pular = 1;
-                                    printf("\n> Voce pulou a pergunta! Pressione Enter para continuar...");
-                                    pausar_tela();
-                                    pergunta_respondida = 1;
-                                } else {
-                                    printf("\n> Voce ja usou 'Pular'!\n");
-                                    pausar_tela();
-                                }
-                                break;
-                            case 'T':
-                                if (jogador.usou_trocar == 0) {
-                                    jogador.usou_trocar = 1;
-                                    questao_atual = obter_nova_questao_aleatoria(banco_de_questoes, jogador.nivel_atual, questao_atual);
-                                    printf("\n> Pergunta trocada! Pressione Enter para continuar...");
-                                    pausar_tela();
-                                } else {
-                                    printf("\n> Voce ja usou 'Trocar'!\n");
-                                    pausar_tela();
-                                }
-                                break;
-                            case 'H':
-                                if (jogador.usou_dica == 0) {
-                                    jogador.usou_dica = 1;
-                                    printf("\n> DICA: %s\n", questao_atual.dica);
-                                    pausar_tela();
-                                } else {
-                                    printf("\n> Voce ja usou 'Help'!\n");
-                                    pausar_tela();
-                                }
-                                break;
-                            
-                            case 'S':
-                                system("cls");
-                                printf("\nObrigado por jogar! Ate a proxima.\n");
-                                exit(0);
-                           
-                            default:
-                                printf("\n> Opcao invalida! Tente novamente.\n");
-                                pausar_tela();
-                                break;
+                    for (int i = 0; i < num_questoes_carregadas; i++) {
+                        if (banco_de_questoes[i].nivel == jogador.nivel_atual) {
+                            indices_pool_nivel[num_questoes_neste_nivel] = i;
+                            num_questoes_neste_nivel++;
                         }
                     }
 
-                    indice_questao_nivel++;
-                    if (indice_questao_nivel >= (NUM_TOTAL_QUESTOES / NUM_NIVEIS)) {
-                        jogador.nivel_atual++;
-                        indice_questao_nivel = 0;
+                    if (num_questoes_neste_nivel == 0) {
+                        jogador.nivel_atual++; 
+                        continue; 
                     }
-                }
+
+                    // --- 2. EMBARALHAR O POOL ---
+                    shuffle_indices(indices_pool_nivel, num_questoes_neste_nivel);
+
+                    // --- 3. DEFINIR QUANTAS PERGUNTAS RESPONDER ---
+                    int perguntas_a_responder = PERGUNTAS_POR_NIVEL;
+                    if (perguntas_a_responder > num_questoes_neste_nivel) {
+                        perguntas_a_responder = num_questoes_neste_nivel; 
+                    }
+
+                    int proximo_indice_troca = perguntas_a_responder;
+                    int perguntas_respondidas_no_nivel = 0;
+
+                    // --- LOOP DAS 3 PERGUNTAS DO NIVEL ---
+                    while (perguntas_respondidas_no_nivel < perguntas_a_responder && jogador.vidas > 0) {
+                        
+                        int indice_da_questao = indices_pool_nivel[perguntas_respondidas_no_nivel];
+                        Questao questao_atual = banco_de_questoes[indice_da_questao];
+                        
+                        int pergunta_foi_respondida_ou_pulada = 0;
+
+                        // --- LOOP DE UMA UNICA PERGUNTA (espera A,B,C,D,P,T,H) ---
+                        while (!pergunta_foi_respondida_ou_pulada && jogador.vidas > 0) {
+                            
+                            exibir_interface_jogo(jogador, questao_atual);
+                            char entrada_jogador;
+                            scanf(" %c", &entrada_jogador);
+                            entrada_jogador = (char)toupper((unsigned char)entrada_jogador);
+
+                            switch (entrada_jogador) {
+                                case 'A': case 'B': case 'C': case 'D':
+                                    if (entrada_jogador == questao_atual.resposta_correta) {
+                                        jogador.pontuacao += 10;
+                                        if (jogador.vidas >= MAX_VIDAS){ 
+                                            printf("Voce ja esta com o maximo de vidas!\n");
+                                        } else {
+                                           jogador.vidas+=1; 
+                                        }
+                                        exibir_feedback(1, questao_atual.resposta_correta, &jogador);
+                                    } else {
+                                        jogador.vidas-=1;
+                                        exibir_feedback(0, questao_atual.resposta_correta, &jogador);
+                                    }
+                                    pergunta_foi_respondida_ou_pulada = 1;
+                                    break;
+                                
+                                case 'P': // PULAR
+                                    if (jogador.usou_pular == 0) {
+                                        jogador.usou_pular = 1;
+                                        printf("\n> Voce pulou a pergunta! (Sem pontos/vida). Pressione Enter...");
+                                        pausar_tela();
+                                        pergunta_foi_respondida_ou_pulada = 1; 
+                                    } else {
+                                        printf("\n> Voce ja usou 'Pular'!\n");
+                                        pausar_tela();
+                                    }
+                                    break;
+                                
+                                case 'T': // TROCAR
+                                    if (jogador.usou_trocar == 0) {
+                                        if (proximo_indice_troca < num_questoes_neste_nivel) {
+                                            jogador.usou_trocar = 1;
+                                            int indice_nova_questao = indices_pool_nivel[proximo_indice_troca];
+                                            questao_atual = banco_de_questoes[indice_nova_questao];
+                                            proximo_indice_troca++; 
+                                            
+                                            printf("\n> Pergunta trocada! Pressione Enter para continuar...");
+                                            pausar_tela();
+                                        } else {
+                                            printf("\n> Nao ha mais perguntas para trocar neste nivel!\n");
+                                            pausar_tela();
+                                        }
+                                    } else {
+                                        printf("\n> Voce ja usou 'Trocar'!\n");
+                                        pausar_tela();
+                                    }
+                                    break;
+                                
+                                case 'H': // DICA
+                                    if (jogador.usou_dica == 0) {
+                                        jogador.usou_dica = 1;
+                                        printf("\n> DICA: %s\n", questao_atual.dica);
+                                        pausar_tela();
+                                    } else {
+                                        printf("\n> Voce ja usou 'Help'!\n");
+                                        pausar_tela();
+                                    }
+                                    break;
+                                
+                                case 'S': // SAIR
+                                    limpar_tela();
+                                    printf("\nObrigado por jogar! Ate a proxima.\n");
+                                    exit(0);
+                               
+                                default:
+                                    printf("\n> Opcao invalida! Tente novamente.\n");
+                                    pausar_tela();
+                                    break;
+                            }
+                        } // Fim do loop de uma unica pergunta
+
+                        perguntas_respondidas_no_nivel++; 
+
+                    } // Fim do loop DAS 3 PERGUNTAS
+
+                    // --- FIM DO NIVEL ---
+                    if (jogador.vidas > 0) {
+                        jogador.nivel_atual++; 
+                        if (jogador.nivel_atual <= NUM_NIVEIS) {
+                             printf("\n> PARABENS! Voce avancou para o Nivel %d!\n", jogador.nivel_atual);
+                             pausar_tela();
+                             jogador.usou_pular = 0;
+                             jogador.usou_trocar = 0;
+                             jogador.usou_dica = 0;
+                        }
+                    }
+                } // Fim do while (jogo principal)
 
                 if (jogador.vidas > 0) exibir_tela_vitoria(jogador);
                 else exibir_tela_derrota();
@@ -161,8 +228,7 @@ int main() {
     return 0;
 }
 
-// --- FUNÇÕES DE INTERFACE ---
-
+// --- FUNCOES DE INTERFACE ---
 void limpar_tela() {
 #ifdef _WIN32
     system("cls");
@@ -216,7 +282,7 @@ void exibir_menu() {
     limpar_tela();
     box_title("MENU");
     box_line("");
-    box_line("BEM VINDO AO JOGO DE QUIZ!"); // vai tomar no cu
+    box_line("BEM VINDO AO JOGO DE QUIZ!");
     box_line("");
     box_line(" [1] Iniciar Jogo");
     box_line(" [2] Instrucoes");
@@ -232,8 +298,10 @@ void exibir_instrucoes() {
     box_title("INSTRUCOES");
     box_line("");
     box_printf("- O jogo tem %d niveis (Facil, Medio e Dificil).", NUM_NIVEIS);
-    box_printf("- Voce comeca com %d vidas.", VIDAS_INICIAIS);
-    box_line("- Ajudas (uma vez cada): [P] Pular  [T] Trocar  [H] Dica  [S] Sair" );
+    box_printf("- Voce deve acertar %d perguntas para avancar de nivel.", PERGUNTAS_POR_NIVEL);
+    box_printf("- Voce comeca com %d vida(s) e pode acumular ate %d.", VIDAS_INICIAIS, MAX_VIDAS);
+    box_line("- Ajudas (uma vez POR NIVEL): [P] Pular  [T] Trocar  [H] Dica");
+    box_line("- [S] Sair (a qualquer momento)");
     box_line("");
     box_line("Pressione Enter para voltar ao menu...");
     box_border();
@@ -244,7 +312,8 @@ void exibir_interface_jogo(Jogador jogador, Questao questao) {
     limpar_tela();
     box_title("NIVEL ATUAL");
     box_printf("Nivel: %d", jogador.nivel_atual);
-    box_printf("Vidas: %d/%d", jogador.vidas, VIDAS_INICIAIS);
+    box_printf("Vidas: %d/%d", jogador.vidas, MAX_VIDAS);
+    box_printf("Pontuacao: %d", jogador.pontuacao);
     char ajudas[128];
     snprintf(ajudas, sizeof(ajudas),
              "[P] Pular%s  [T] Trocar%s  [H] Dica%s  [S] Sair",
@@ -255,7 +324,16 @@ void exibir_interface_jogo(Jogador jogador, Questao questao) {
     box_border();
 
     box_title("PERGUNTA");
-    box_line(questao.pergunta);
+    
+    char* pergunta_formatada = strdup(questao.pergunta); 
+    char* token = strtok(pergunta_formatada, "\n"); 
+    
+    while (token != NULL) {
+        box_line(token);
+        token = strtok(NULL, "\n"); 
+    }
+    free(pergunta_formatada); 
+    
     box_printf("A) %s", questao.alternativas[0]);
     box_printf("B) %s", questao.alternativas[1]);
     box_printf("C) %s", questao.alternativas[2]);
@@ -268,11 +346,11 @@ void exibir_interface_jogo(Jogador jogador, Questao questao) {
     printf("> ");
 }
 
-void exibir_feedback(int correto, char resposta_certa) {
+void exibir_feedback(int correto, char resposta_certa, Jogador* jogador) {
     if (correto)
         printf("\n> RESPOSTA CORRETA! +10 pontos.\n");
     else
-        printf("\n> RESPOSTA INCORRETA! Resposta certa: %c.\n", resposta_certa);
+        printf("\n> RESPOSTA INCORRETA! Resposta certa: %c. (Vidas: %d)\n", resposta_certa, jogador->vidas);
     printf("Pressione Enter para continuar...");
     pausar_tela();
 }
@@ -298,7 +376,7 @@ void exibir_tela_derrota() {
 }
 
 void inicializar_jogador(Jogador *jogador) {
-    jogador->vidas = 1;
+    jogador->vidas = VIDAS_INICIAIS; 
     jogador->pontuacao = 0;
     jogador->nivel_atual = 1;
     jogador->usou_pular = 0;
@@ -306,88 +384,233 @@ void inicializar_jogador(Jogador *jogador) {
     jogador->usou_dica = 0;
 }
 
-// --- BANCO DE QUESTOES ---
-void carregar_banco_de_questoes(Questao banco[]) {
-    // Nível 1 - Fácil
-    banco[0] = (Questao){"Qual e a forma correta de declarar uma variavel inteira em C?",
-        {"int numero;", "integer numero;", "numero int;", "var numero;"},
-        'A', "Em C, sempre comeca com o tipo.", 1};
-    banco[1] = (Questao){"O que acontece se voce declarar uma variavel local sem inicializa-la?",
-        {"Ela recebe automaticamente o valor zero.", "Ela recebe um valor fixo do compilador.", "Ela pode conter qualquer valor lixo que já estava na memória.", "Ela não pode ser usada até ser inicializada."},
-        'C', "Variaveis locais em C não tem valor padrao.", 1};
-    banco[2] = (Questao){"Qual das alternativas abaixo é incorreta sobre variáveis em C?",
-        {"Uma variável precisa ter tipo e nome.", "Mesmo nome pode repetir no escopo.", "Pode declarar varias na mesma linha.", "Tipo define espaco em memoria."},
-        'B', "Nomes nao se repetem no mesmo bloco.", 1};
-    banco[3] = (Questao){"Suponha char letra = 'A';. Qual imprime a letra corretamente?",
-        {"printf(\"%s\", letra);", "printf(\"%c\", letra);", "printf(\"%d\", letra);", "printf(\"%f\", letra);"},
-        'B', "%d e inteiro, %f e ponto flutuante.", 1};
-     banco[4] = (Questao){"Sobre o uso do scanf para leitura de strings em C, qual afirmação é correta?",
-        {" scanf(''%s'', nome); lê a string inteira, mesmo que tenha espaços.", "scanf(''%s'', nome); interrompe a leitura no primeiro espaço encontrado.", "Sempre é necessário usar &nome em scanf(''%s'', ...)", " Não existe risco de buffer overflow ao usar scanf para strings."},
-        'B', "%s le ate espaco ou tabulacao.", 1};
+// --- FUNCOES DO PARSER JSON MANUAL ---
 
-    // Nível 2 - Médio
-    banco[5] = (Questao){"Qual e a saida do codigo: int x; printf(\"%d\", x); return 0;}",
-        {"Imprime 0.", "Imprime 1.", "Valor indefinido (lixo).", "Nao compila."},
-        'C', "Variaveis locais nao inicializadas tem valor indeterminado.", 2};
-    banco[6] = (Questao){"Qual printf exibe corretamente Nome e Idade?, ome [ ] = ''Maria''; int idade = 22; ",
-        {"printf(\"Nome: %s, Idade: %d\", nome, idade);", "printf(\"Nome: %c, Idade: %f\", nome, idade);", "printf(\"%d, %s\", nome, idade);", "printf(\"Maria, 22\");"},
-        'A', "%s imprime string e %d imprime inteiro.", 2};
-   
-    banco[7] = (Questao){"char nome[20]; scanf(''%19s'', nome);, Qual a vantagem de usar %19s no scanf?",
-        {" Impede que o usuário digite menos de 19 caracteres", " Permite armazenar apenas números e não letras.", "Limita a quantidade de caracteres lidos e evita estouro do vetor.", "Torna a leitura mais rapida."},
-        'C', "Limita quantidade de caracteres lidos.", 2};
-    banco[8] = (Questao){"Sobre a função fgets em C, marque a alternativa correta:",
-        {" Lê apenas uma palavra, assim como o scanf(''%s'').", "Lê apenas uma palavra, assim como o scanf(''%s'').", "Não funciona para strings, apenas números.", "Precisa de & antes da variavel."},
-        'B', "fgets e mais segura que scanf para strings.", 2};
-    banco[9] = (Questao){"Qual biblioteca deve ser incluida para usar rand()em c?",
-        {"#include <math.h>", "#include <stdlib.h>", "#include <stdio.h>", "#include <time.h>"},
-        'B', "A função rand() esta na mesma biblioteca de malloc e free.", 2};
-    banco[10] = (Questao){"O que rand() retorna por padrao?",
-        {"Um número real entre 0 e 1.", "Um número inteiro entre 0 e RAND_MAX.", "Um número inteiro entre -RAND_MAX e RAND_MAX.", "Sempre 0."},
-        'B', "O limite máximo é definido por uma constante do C chamada RAND_MAX", 2};
-
-    // Nível 3 - Difícil
-    banco[11] = (Questao){ "Considere dois vetores 2D: ( [u = (2, -1), \ quad v = (1, 3)]O produto interno é dado por:[u \ cdot v = u_x v_x + u_y v_y] ), Com base nisso, qual é o sinal do ângulo entre os vetores e, portanto, o bit recebido?",
-        {"Bit=0", "Bit=1", "Bit=-1 (erro)", "Bit=indefinido"},
-        'A', "Produto interno positivo -> bit=0.", 3};
-    banco[12] = (Questao){"O programa em C utiliza o cálculo do produto interno para decidir o bit recebido:( int a1 = -2, a2 = 4;int b1 = 3, b2 = 1;int produto = a1*b1 + a2*b2; ), Se produto == 0, o sistema deve registrar erro. Qual será o valor do bit calculado?",
-        {"0", "1", "-1 (erro)", "Indefinido"},
-        'B', "Calcule o produto: (-1)+2*1.", 3};
-    banco[13] = (Questao){"Qual é o problema de usar rand() sem configurar a semente com srand()?",
-        {"O programa pode trava.", "O compilador não aceita compilar.", " A sequência de números será sempre a mesma a cada execução", "Não há problema, sempre será totalmente aleatório."},
-        'C', "Pense no comportamento padrão quando não se inicializa algo em C.", 3};
-    banco[14] = (Questao){"Qual das alternativas gera corretamente um número inteiro aleatório entre 0 e 9?",
-        {"rand() % 10;", "rand(10);", "rand() / 10;", "rand(0,9);"},
-        'A', " O operador % (módulo) ajuda a limitar o intervalo", 3};
-    banco[15] = (Questao){"Suponha o seguinte código:( #include <stdio.h>, #include <stdlib.h>, #include <time.h>  int main() { srand(time(NULL)); printf(''%d\n'', rand() % 2); return 0;} ), O que esse programa imprime?",
-        {"Sempre 0.", "Sempre 1.", "Valores aleatorios entre 0 e 1.", "Valores aleatorios entre 1 e 2."},
-        'C', "%2 gera resto 0 ou 1.", 3};
- }
-
-Questao obter_questao_por_nivel(Questao banco[], int nivel, int indice_questao_nivel) {
-    int contador_nivel = 0;
-    for (int i = 0; i < NUM_TOTAL_QUESTOES; i++) {
-        if (banco[i].nivel == nivel) {
-            if (contador_nivel == indice_questao_nivel) return banco[i];
-            contador_nivel++;
-        }
-    } 
-    return banco[0];
+char* pular_espacos(char* cursor) {
+    while (*cursor != '\0' && isspace((unsigned char)*cursor)) {
+        cursor++;
+    }
+    return cursor;
 }
 
-Questao obter_nova_questao_aleatoria(Questao banco[], int nivel_atual, Questao questao_antiga) {
-    Questao nova_questao;
-    int mesma_pergunta;
-    do {
-        mesma_pergunta = 0;
-        int indice_aleatorio = rand() % NUM_TOTAL_QUESTOES;
-        nova_questao = banco[indice_aleatorio];
+char* parse_string(char* cursor, char* destino, int tam_max) {
+    if (*cursor != '"') {
+        return cursor;
+    }
+    cursor++;
 
-        if (nova_questao.nivel == nivel_atual && strcmp(nova_questao.pergunta, questao_antiga.pergunta) != 0) {
-            return nova_questao;
+    int i = 0;
+    while (*cursor != '\0' && *cursor != '"' && i < (tam_max - 1)) {
+        if (*cursor == '\\') {
+            cursor++;
+            switch (*cursor) {
+                case 'n':  destino[i] = '\n'; break;
+                case 't':  destino[i] = '\t'; break;
+                case '"':  destino[i] = '"';  break;
+                case '\\': destino[i] = '\\'; break;
+                default:   destino[i] = *cursor; break;
+            }
         } else {
-            mesma_pergunta = 1;
+            destino[i] = *cursor;
         }
-    } while (mesma_pergunta == 1);
-    return nova_questao;
+        i++;
+        cursor++;
+    }
+    destino[i] = '\0'; 
+
+    if (*cursor == '"') {
+        cursor++;
+    }
+    return cursor;
+}
+
+char* parse_number(char* cursor, int* destino) {
+    char num_buffer[20];
+    int i = 0;
+    if (*cursor == '-') {
+        num_buffer[i++] = *cursor;
+        cursor++;
+    }
+    while (*cursor != '\0' && isdigit((unsigned char)*cursor) && i < 19) {
+        num_buffer[i++] = *cursor;
+        cursor++;
+    }
+    num_buffer[i] = '\0';
+    *destino = atoi(num_buffer);
+    return cursor;
+}
+
+char* parse_array_alternativas(char* cursor, Questao* q) {
+    if (*cursor != '[') {
+        return cursor;
+    }
+    cursor++;
+
+    int i = 0;
+    while (*cursor != '\0' && *cursor != ']' && i < 4) {
+        cursor = pular_espacos(cursor);
+        if (*cursor == '"') {
+            cursor = parse_string(cursor, q->alternativas[i], 100); 
+            i++;
+        }
+        cursor = pular_espacos(cursor);
+        if (*cursor == ',') {
+            cursor++;
+        } else if (*cursor == ']') {
+            break;
+        }
+    }
+    if (*cursor == ']') {
+        cursor++;
+    }
+    return cursor;
+}
+
+char* parse_object(char* cursor, Questao* q) {
+    if (*cursor != '{') {
+        return cursor;
+    }
+    cursor++;
+
+    char chave[100];
+    char resposta_str[10];
+
+    while (*cursor != '\0' && *cursor != '}') {
+        cursor = pular_espacos(cursor);
+        if (*cursor != '"') {
+            break; 
+        }
+        cursor = parse_string(cursor, chave, 100);
+        cursor = pular_espacos(cursor);
+        if (*cursor != ':') {
+            break;
+        }
+        cursor++;
+        cursor = pular_espacos(cursor);
+        
+        if (strcmp(chave, "Enunciado") == 0) {
+            cursor = parse_string(cursor, q->pergunta, 256);
+        } 
+        else if (strcmp(chave, "Resposta correta") == 0) {
+            cursor = parse_string(cursor, resposta_str, 10);
+            q->resposta_correta = resposta_str[0];
+        } 
+        else if (strcmp(chave, "Dica") == 0) {
+            cursor = parse_string(cursor, q->dica, 128);
+        } 
+        else if (strcmp(chave, "Nivel") == 0) {
+            cursor = parse_number(cursor, &q->nivel);
+        } 
+        else if (strcmp(chave, "Alternativas") == 0) {
+            cursor = parse_array_alternativas(cursor, q);
+        } 
+        else {
+             if (*cursor == '"') { 
+                 cursor = parse_string(cursor, resposta_str, 10); 
+             }
+             else if (isdigit((unsigned char)*cursor) || *cursor == '-') { 
+                 int temp_int;
+                 cursor = parse_number(cursor, &temp_int);
+             }
+             else if (*cursor == '[') { 
+                 int array_level = 0;
+                 do {
+                     if (*cursor == '[') array_level++;
+                     else if (*cursor == ']') array_level--;
+                     if (*cursor != '\0') cursor++;
+                 } while (array_level > 0 && *cursor != '\0');
+             }
+             else if (*cursor == '{') { 
+                int obj_level = 0;
+                 do {
+                     if (*cursor == '{') obj_level++;
+                     else if (*cursor == '}') obj_level--;
+                     if (*cursor != '\0') cursor++;
+                 } while (obj_level > 0 && *cursor != '\0');
+             }
+        }
+
+        cursor = pular_espacos(cursor);
+        if (*cursor == ',') {
+            cursor++;
+        } else if (*cursor == '}') {
+            break; 
+        }
+    }
+    if (*cursor == '}') {
+        cursor++;
+    }
+    return cursor;
+}
+
+
+// --- BANCO DE QUESTOES ---
+int carregar_banco_de_questoes(Questao banco[], int max_questoes) {
+    FILE *f = fopen("perguntas.json", "rb");
+    if (f == NULL) {
+        return 0;
+    }
+    
+    char* buffer = (char*)malloc(MAX_BUFFER_ARQUIVO);
+    if (buffer == NULL) {
+        fclose(f);
+        return 0;
+    }
+
+    size_t tamanho_lido = fread(buffer, 1, MAX_BUFFER_ARQUIVO - 1, f);
+    buffer[tamanho_lido] = '\0';
+    fclose(f);
+    
+    int num_questoes = 0;
+    char* cursor = buffer;
+    
+    cursor = pular_espacos(cursor);
+    if (*cursor != '[') {
+        free(buffer);
+        return 0; 
+    }
+    cursor++;
+
+    while (*cursor != '\0' && *cursor != ']' && num_questoes < max_questoes) {
+        cursor = pular_espacos(cursor);
+        
+        if (*cursor == '{') {
+            cursor = parse_object(cursor, &banco[num_questoes]);
+            num_questoes++;
+            
+            cursor = pular_espacos(cursor);
+            if (*cursor == ',') {
+                cursor++;
+            } else if (*cursor == ']') {
+                break;
+            }
+        } else {
+             if (*cursor != ']') break;
+        }
+    }
+
+    free(buffer);
+    return num_questoes;
+}
+
+
+/**
+ * @brief Embaralha um array de inteiros.
+ * --- CORRECAO AQUI ---
+ * Algoritmo de Fisher-Yates (versao moderna, com modulo).
+ * Esta versao e mais robusta que a anterior.
+ */
+void shuffle_indices(int *array, int n) {
+    if (n > 1) {
+        // Itera do ultimo elemento (n-1) ate o segundo (1)
+        for (int i = n - 1; i > 0; i--) {
+            // Escolhe um indice aleatorio 'j' entre 0 e i (inclusive)
+            int j = rand() % (i + 1);
+            
+            // Troca array[i] e array[j]
+            int temp = array[i];
+            array[i] = array[j];
+            array[j] = temp;
+        }
+    }
 }

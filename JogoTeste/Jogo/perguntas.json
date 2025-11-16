@@ -1,0 +1,124 @@
+
+[
+  {
+    "Enunciado": "Qual é a forma correta de declarar uma variável inteira em C?",
+    "Alternativas": ["int numero;", "integer numero;", "numero int;", "var numero;"],
+    "Resposta correta": "A",
+    "Dica": "Em C, sempre começa com o tipo.",
+    "Nivel": 1
+  },
+  {
+    "Enunciado": "O que acontece se você declarar uma variável local em C sem inicializá-la?",
+    "Alternativas": ["Ela recebe automaticamente o valor zero.", "Ela recebe um valor fixo do compilador.", "Ela pode conter qualquer valor lixo que já estava na memória.", "Ela não pode ser usada até ser inicializada."],
+    "Resposta correta": "C",
+    "Dica": "Variáveis locais em C não têm valor padrão.",
+    "Nivel": 1
+  },
+  {
+    "Enunciado": "Qual das alternativas abaixo é incorreta sobre variáveis em C?",
+    "Alternativas": ["Uma variável precisa ter tipo e nome.", "Duas variáveis de mesmo nome podem existir no mesmo escopo.", "É possível declarar várias variáveis do mesmo tipo na mesma linha.", "O tipo da variável define o espaço em memória que ela ocupa."],
+    "Resposta correta": "B",
+    "Dica": "Pense na regra de escopo: nomes não podem se repetir no mesmo bloco.",
+    "Nivel": 1
+  },
+  {
+    "Enunciado": "Suponha a variável char letra = 'A';. Qual opção imprime a letra corretamente com printf?",
+    "Alternativas": ["printf(\"%s\", letra);", "printf(\"%c\", letra);", "printf(\"%d\", letra);", "printf(\"%f\" , letra);"],
+    "Resposta correta": "B",
+    "Dica": "%d é inteiro (int); %f é ponto flutuante (float ou double).",
+    "Nivel": 1
+  },
+  {
+    "Enunciado": "Qual das alternativas abaixo é incorreta sobre variáveis em C?",
+    "Alternativas": ["Uma variável precisa ter tipo e nome.", "Duas variáveis de mesmo nome podem existir no mesmo escopo.", "É possível declarar várias variáveis do mesmo tipo na mesma linha.", "O tipo da variável define o espaço em memória que ela ocupa."],
+    "Resposta correta": "B",
+    "Dica": "Pense na regra de escopo: nomes não podem se repetir no mesmo bloco.",
+    "Nivel": 1
+  },
+
+  {
+    "Enunciado": "#include <stdio.h>\\n\\nint main() {\\n\\n   int x;\\n\\n   printf(\"%d\", x);\\n\\n   return 0;\\n\\n}",
+    "Alternativas": ["Vai imprimir sempre 0.", "Vai imprimir sempre 1.", "Vai imprimir um valor indefinido (lixo de memória).", "O programa não compila."],
+    "Resposta correta": "C",
+    "Dica": "Variáveis locais não inicializadas têm valor indeterminado.",
+    "Nivel": 2
+  },
+  {
+    "Enunciado": "Dadas as variáveis: char nome[] = \"Maria\"; int idade = 22; Qual alternativa usa o printf corretamente para mostrar: Nome: Maria, Idade: 22",
+    "Alternativas": ["printf(\"Nome: %s, Idade: %d\", nome, idade);", "printf(\"Nome: %c, Idade: %f\", nome, idade);", "printf(\"%d, %s\", nome, idade);", "printf(\"Maria, 22\");"],
+    "Resposta correta": "A",
+    "Dica": "%s imprime string e %d imprime inteiro.",
+    "Nivel": 2
+  },
+  {
+    "Enunciado": "Sobre o uso do scanf para leitura de strings em C, qual afirmação é correta?",
+    "Alternativas": ["scanf(\"%s\", nome); lê a string inteira, mesmo que tenha espaços.", "scanf(\"%s\", nome); interrompe a leitura no primeiro espaço encontrado.", "Sempre é necessário usar &nome em scanf(\"%s\", ...).", "Não existe risco de buffer overflow ao usar scanf para strings."],
+    "Resposta correta": "B",
+    "Dica": "%s lê até espaço ou tabulação.",
+    "Nivel": 2
+  },
+  {
+    "Enunciado": "Considere o código: char nome[20]; scanf(\"%19s\", nome); Qual é a vantagem de usar %19s no scanf?",
+    "Alternativas": ["Impede que o usuário digite menos de 19 caracteres.", "Permite armazenar apenas números e não letras.", "Limita a quantidade de caracteres lidos e evita estouro do vetor.", "Torna a leitura mais rápida."],
+    "Resposta correta": "C",
+    "Dica": "O número dentro do %s é usado como limite de caracteres.",
+    "Nivel": 2
+  },
+  {
+    "Enunciado": "Sobre a função fgets em C, marque a alternativa correta:",
+    "Alternativas": ["Lê apenas uma palavra, assim como o scanf(\"%s\").", "Permite limitar o número de caracteres lidos, incluindo espaços.", "Não funciona para strings, apenas números.", "Sempre precisa de & antes da variável."],
+    "Resposta correta": "B",
+    "Dica": "fgets é mais seguro que scanf(\"%s\") para strings.",
+    "Nivel": 2
+  },
+  {
+    "Enunciado": "Qual biblioteca deve ser incluída para usar a função rand() em C?",
+    "Alternativas": ["#include <math.h>", "#include <stdlib.h>", "#include <stdio.h>", "#include <time.h>"],
+    "Resposta correta": "B",
+    "Dica": "A função rand() está na mesma biblioteca de funções como malloc e free.",
+    "Nivel": 2
+  },
+  {
+    "Enunciado": "O que a função rand() retorna por padrão?",
+    "Alternativas": ["Um número real entre 0 e 1.", "Um número inteiro aleatório entre 0 e RAND_MAX.", "Um número inteiro entre -RAND_MAX e RAND_MAX.", "Sempre retorna 0."],
+    "Resposta correta": "B",
+    "Dica": "O limite máximo é definido por uma constante do C chamada RAND_MAX.",
+    "Nivel": 2
+  },
+
+  {
+    "Enunciado": "Considere dois vetores 2D: u = (2, -1), v = (1, 3). O produto interno é dado por u·v = ux vx + uy vy. Qual é o sinal do ângulo entre os vetores e, portanto, o bit recebido?",
+    "Alternativas": ["Bit = 0", "Bit = 1", "Bit = -1 (erro)", "Bit = indefinido"],
+    "Resposta correta": "A",
+    "Dica": "Se o produto interno for positivo → ângulo positivo → bit = 0.",
+    "Nivel": 3
+  },
+  {
+    "Enunciado": "O programa em C utiliza o cálculo do produto interno para decidir o bit recebido: int a1 = -2, a2 = 4; int b1 = 3, b2 = 1; int produto = a1*b1 + a2*b2; Se produto == 0, o sistema deve registrar erro. Qual será o valor do bit calculado?",
+    "Alternativas": ["0", "1", "-1 (erro)", "Indefinido"],
+    "Resposta correta": "B",
+    "Dica": "Calcule o produto: (-2)*3 + 4*1 = -6 + 4 = -2 → negativo → bit = 1.",
+    "Nivel": 3
+  },
+  {
+    "Enunciado": "Qual é o problema de usar rand() sem configurar a semente com srand()?",
+    "Alternativas": ["O programa pode travar.", "O compilador não aceita compilar.", "A sequência de números será sempre a mesma a cada execução.", "Não há problema, sempre será totalmente aleatório."],
+    "Resposta correta": "C",
+    "Dica": "Pense no comportamento padrão quando não se inicializa algo em C.",
+    "Nivel": 3
+  },
+  {
+    "Enunciado": "Qual das alternativas gera corretamente um número inteiro aleatório entre 0 e 9?",
+    "Alternativas": ["rand() % 10;", "rand(10);", "rand() / 10;", "rand(0, 9);"],
+    "Resposta correta": "A",
+    "Dica": "O operador % (módulo) ajuda a limitar o intervalo.",
+    "Nivel": 3
+  },
+  {
+    "Enunciado": "#include <stdio.h>\\n#include <stdlib.h>\\n#include <time.h>\\n\\nint main() {\\n\\n    srand(time(NULL));\\n\\n    printf(\"%d\\n\", rand() % 2);\\n\\n    return 0;\\n}",
+    "Alternativas": ["Sempre 0.", "Sempre 1.", "Valores aleatórios entre 0 e 1.", "Valores aleatórios entre 1 e 2."],
+    "Resposta correta": "C",
+    "Dica": "% 2 gera resto da divisão por 2.",
+    "Nivel": 3
+  }
+]
