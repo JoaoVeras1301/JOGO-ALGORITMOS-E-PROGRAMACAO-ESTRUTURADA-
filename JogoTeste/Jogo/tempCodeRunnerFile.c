@@ -1,2 +1,0 @@
-
-    box_title("INSTRUCOES");

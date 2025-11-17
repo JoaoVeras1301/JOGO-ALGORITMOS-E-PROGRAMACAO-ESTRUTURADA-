@@ -49,7 +49,7 @@ static void executar_loop_principal(Questao banco[], int num_questoes_carregadas
         int proximo_indice_troca = perguntas_a_responder;
         int perguntas_respondidas_no_nivel = 0;
         
-        int acertos_neste_nivel = 0; // <-- MUDANÇA 1: Adiciona o contador de acertos
+        int acertos_neste_nivel = 0;
 
         while (perguntas_respondidas_no_nivel < perguntas_a_responder && jogador.vidas > 0) {
             
@@ -75,7 +75,7 @@ static void executar_loop_principal(Questao banco[], int num_questoes_carregadas
                                jogador.vidas+=1; 
                             }
                             exibir_feedback(1, questao_atual.resposta_correta, &jogador);
-                            acertos_neste_nivel++; // <-- MUDANÇA 2: Incrementa o contador
+                            acertos_neste_nivel++;
                         } else {
                             jogador.vidas-=1;
                             exibir_feedback(0, questao_atual.resposta_correta, &jogador);
@@ -83,16 +83,12 @@ static void executar_loop_principal(Questao banco[], int num_questoes_carregadas
                         pergunta_foi_respondida_ou_pulada = 1;
                         break;
                     
-                    // ... (Cases P, T, H, S continuam iguais) ...
-                    case 'P': // PULAR (AGORA CONTA COMO ACERTO)
+                    case 'P': 
                         if (jogador.usou_pular == 0) {
                             jogador.usou_pular = 1;
-
-                            // --- INICIO DA LOGICA DE ACERTO ---
-                            // Copiamos a logica de uma resposta correta para ca
                             
                             jogador.pontuacao += 10;
-                            acertos_neste_nivel++; // Contabiliza para passar de nivel
+                            acertos_neste_nivel++;
 
                             if (jogador.vidas >= MAX_VIDAS){ 
                                 printf("Voce ja esta com o maximo de vidas!\n");
@@ -100,9 +96,7 @@ static void executar_loop_principal(Questao banco[], int num_questoes_carregadas
                             jogador.vidas+=1; 
                             }
                             
-                            // Reutiliza a funcao de feedback de acerto
                             exibir_feedback(1, questao_atual.resposta_correta, &jogador);
-                            // --- FIM DA LOGICA DE ACERTO ---
 
                             pergunta_foi_respondida_ou_pulada = 1; 
                         } else {
@@ -156,33 +150,24 @@ static void executar_loop_principal(Questao banco[], int num_questoes_carregadas
             perguntas_respondidas_no_nivel++; 
         } 
 
-        // <-- MUDANÇA 3: Lógica de fim de nível completamente alterada -->
         if (jogador.vidas > 0) {
-            // Verifica se passou de nível (acertou o minimo)
             if (acertos_neste_nivel >= PERGUNTAS_POR_NIVEL) {
                 jogador.nivel_atual++; 
                 if (jogador.nivel_atual <= NUM_NIVEIS) {
                      printf("\n> PARABENS! Voce acertou %d/%d e avancou para o Nivel %d!\n", acertos_neste_nivel, PERGUNTAS_POR_NIVEL, jogador.nivel_atual);
                      pausar_tela();
-                     // Reseta ajudas para o proximo nivel
                      jogador.usou_pular = 0;
                      jogador.usou_trocar = 0;
                      jogador.usou_dica = 0;
                 }
             } else {
-                // Sobreviveu, mas nao acertou o suficiente. Repete o nível.
                 printf("\n> Voce acertou %d/%d. E preciso acertar %d para avancar.\n", acertos_neste_nivel, PERGUNTAS_POR_NIVEL, PERGUNTAS_POR_NIVEL);
                 printf("> Repetindo o Nivel %d. Pressione Enter...\n", jogador.nivel_atual);
                 pausar_tela();
-                // Nao incrementamos o nivel, entao o loop while principal vai rodar o mesmo nivel de novo
-                // Nao resetamos as ajudas, pois ele esta no mesmo nivel
             }
         }
-        // Se jogador.vidas <= 0, o 'if' acima e pulado, o 'while' principal termina,
-        // e a tela de derrota e exibida (abaixo).
     } 
 
-    // Exibe Vitoria ou Derrota
     if (jogador.vidas > 0) exibir_tela_vitoria(jogador);
     else exibir_tela_derrota();
 }
