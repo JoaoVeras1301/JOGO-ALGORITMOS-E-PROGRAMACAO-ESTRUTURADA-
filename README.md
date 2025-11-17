@@ -30,13 +30,11 @@ O jogo carrega todas as suas perguntas de um arquivo perguntas.json externo, per
 
 No Linux/macOS (terminal):
 
-    gcc -o Jogo_do_C jogo.c
-    ./Jogo_do_C
+    gcc main.c parser.c ui.c utils.c -o output/Jogo_do_C
 
 No Windows (usando MinGW/msys):
 
-    gcc -o Jogo_do_C.exe jogo.c
-    .\\Jogo_do_C.exe
+    gcc main.c parser.c ui.c utils.c -o output\Jogo_do_C
 
 ---
 
@@ -58,4 +56,4 @@ No Windows (usando MinGW/msys):
 
 ## Créditos
 
-Autor original do código: Erick Teixeira, Guilherme Augusto, João Veras, Alexandre Alves, Diogo Souza
+Autor original do código: Alexandre Alves, Diogo Souza, Erick Teixeira, Guilherme Augusto, João Veras e Lucas Souza
